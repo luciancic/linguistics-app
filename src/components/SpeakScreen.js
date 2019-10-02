@@ -7,6 +7,8 @@ function SpeakScreen() {
   // After checking, can be one of: 'authorized', 'denied', 'restricted', or 'undetermined'.
   const [permissionMicrophone, setPermissionMicrophone] = useState(null);
   const [permissionStorage, setPermissionStorage] = useState(null);
+  const [duration, setDuration] = useState(null);
+  const [currentPosition, setCurrentPosition] = useState(null);
   const audioRecorderPlayer = new AudioRecorderPlayer();
 
   useEffect(() => {
@@ -47,6 +49,16 @@ function SpeakScreen() {
     }
   }, [permissionMicrophone, permissionStorage]);
 
+  useEffect(() => {
+    if (duration >= currentPosition && duration !== null) {
+      console.log('Duration:', duration);
+      console.log('Current position:', currentPosition);
+      (async () => {
+        await audioRecorderPlayer.stopPlayer();
+      })();
+    }
+  }, [duration, currentPosition, audioRecorderPlayer]);
+
   function _requestPermissionMicrophone() {
     Permissions.request('microphone').then(status => {
       setPermissionMicrophone(status);
@@ -82,24 +94,28 @@ function SpeakScreen() {
   async function onStartPlay() {
     console.log('onStartPlay');
     const msg = await audioRecorderPlayer.startPlayer();
-    console.log(msg);
-    audioRecorderPlayer.addPlayBackListener(e => {
-      if (e.current_position === e.duration) {
-        console.log('finished');
-        audioRecorderPlayer.stopPlayer();
-      }
-      return;
+    console.log('Done waiting to start playing', msg);
+    audioRecorderPlayer.addPlayBackListener(async function(ev) {
+      setDuration(ev.duration);
+      setCurrentPosition(ev.current_position);
     });
   }
 
   async function onPausePlay() {
-    await audioRecorderPlayer.pausePlayer();
+    try {
+      await audioRecorderPlayer.pausePlayer();
+    } catch (err) {
+      console.warn(`Error happened when pausing player: ${err}`);
+    }
   }
 
   async function onStopPlay() {
-    console.log('onStopPlay');
-    audioRecorderPlayer.stopPlayer();
-    audioRecorderPlayer.removePlayBackListener();
+    try {
+      await audioRecorderPlayer.stopPlayer();
+      audioRecorderPlayer.removePlayBackListener();
+    } catch (err) {
+      console.warn(`Error happened when stopping player: ${err}`);
+    }
   }
 
   return (
