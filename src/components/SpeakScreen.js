@@ -118,6 +118,14 @@ function SpeakScreen() {
     }
   }
 
+  async function onSubmit() {
+    const res = await fetch('http://736b1e42.ngrok.io/audio', {
+      method: 'POST',
+      body: 'Placeholder for the audio file',
+    });
+    console.log('Response from post request:', res);
+  }
+
   return (
     <View>
       {permissionMicrophone && permissionStorage ? (
@@ -127,7 +135,7 @@ function SpeakScreen() {
           <Button title="Start Playing" onPress={onStartPlay} />
           <Button title="Pause" onPress={onPausePlay} />
           <Button title="Stop" onPress={onStopPlay} />
-          <Button title="Send to server" onPress={() => {}} />
+          <Button title="Send to server" onPress={onSubmit} />
         </Fragment>
       ) : (
         <Text>Checking your permissions. Please wait...</Text>
