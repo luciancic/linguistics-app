@@ -127,6 +127,7 @@ function SpeakScreen() {
           <Button title="Start Playing" onPress={onStartPlay} />
           <Button title="Pause" onPress={onPausePlay} />
           <Button title="Stop" onPress={onStopPlay} />
+          <Button title="Send to server" onPress={() => {}} />
         </Fragment>
       ) : (
         <Text>Checking your permissions. Please wait...</Text>
