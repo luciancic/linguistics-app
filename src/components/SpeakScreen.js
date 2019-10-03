@@ -2,6 +2,7 @@ import React, {Fragment, useEffect, useState} from 'react';
 import {Alert, Button, Text, View} from 'react-native';
 import Permissions from 'react-native-permissions';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
+import {SERVER_HOST} from '../../config';
 
 function SpeakScreen() {
   // After checking, can be one of: 'authorized', 'denied', 'restricted', or 'undetermined'.
@@ -119,7 +120,7 @@ function SpeakScreen() {
   }
 
   async function onSubmit() {
-    const res = await fetch('http://736b1e42.ngrok.io/audio', {
+    const res = await fetch(`${SERVER_HOST}/audio`, {
       method: 'POST',
       body: 'Placeholder for the audio file',
     });
