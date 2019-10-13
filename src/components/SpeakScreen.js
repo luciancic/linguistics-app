@@ -74,10 +74,6 @@ function SpeakScreen() {
   async function onStartRecord() {
     const result = await audioRecorderPlayer.startRecorder();
     audioRecorderPlayer.addRecordBackListener(e => {
-      // this.setState({
-      //   recordSecs: e.current_position,
-      //   recordTime: this.audioRecorderPlayer.mmssss(Math.floor(e.current_position)),
-      // });
       return;
     });
     console.log(result);
@@ -86,9 +82,6 @@ function SpeakScreen() {
   async function onStopRecord() {
     const result = await audioRecorderPlayer.stopRecorder();
     audioRecorderPlayer.removeRecordBackListener();
-    // this.setState({
-    //   recordSecs: 0,
-    // });
     console.log(result);
   }
 
@@ -132,7 +125,7 @@ function SpeakScreen() {
       {permissionMicrophone && permissionStorage ? (
         <Fragment>
           <Button title="Start Recording" onPress={onStartRecord} />
-          <Button title="Stop Recroding" onPress={onStopRecord} />
+          <Button title="Stop Recording" onPress={onStopRecord} />
           <Button title="Start Playing" onPress={onStartPlay} />
           <Button title="Pause" onPress={onPausePlay} />
           <Button title="Stop" onPress={onStopPlay} />
