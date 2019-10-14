@@ -50,16 +50,6 @@ function SpeakScreen() {
     }
   }, [permissionMicrophone, permissionStorage]);
 
-  useEffect(() => {
-    if (duration >= currentPosition && duration !== null) {
-      console.log('Duration:', duration);
-      console.log('Current position:', currentPosition);
-      (async () => {
-        await audioRecorderPlayer.stopPlayer();
-      })();
-    }
-  }, [duration, currentPosition, audioRecorderPlayer]);
-
   function _requestPermissionMicrophone() {
     Permissions.request('microphone').then(status => {
       setPermissionMicrophone(status);
@@ -72,23 +62,23 @@ function SpeakScreen() {
   }
 
   async function onStartRecord() {
-    const result = await audioRecorderPlayer.startRecorder();
-    audioRecorderPlayer.addRecordBackListener(e => {
-      return;
-    });
-    console.log(result);
+    try {
+      await audioRecorderPlayer.startRecorder();
+      // audioRecorderPlayer.addRecordBackListener(e => {});
+      console.log('Started recording');
+    } catch (err) {
+      console.warn('Failed to start recording', err);
+    }
   }
 
   async function onStopRecord() {
-    const result = await audioRecorderPlayer.stopRecorder();
+    await audioRecorderPlayer.stopRecorder();
     audioRecorderPlayer.removeRecordBackListener();
-    console.log(result);
+    console.log('Stopped recording');
   }
 
   async function onStartPlay() {
-    console.log('onStartPlay');
-    const msg = await audioRecorderPlayer.startPlayer();
-    console.log('Done waiting to start playing', msg);
+    await audioRecorderPlayer.startPlayer();
     audioRecorderPlayer.addPlayBackListener(async function(ev) {
       setDuration(ev.duration);
       setCurrentPosition(ev.current_position);
