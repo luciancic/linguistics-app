@@ -2,6 +2,7 @@ import React, {Fragment, useEffect, useState} from 'react';
 import {Alert, Button, Text, View} from 'react-native';
 import Permissions from 'react-native-permissions';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
+import {SERVER_HOST} from '../../config';
 
 function SpeakScreen() {
   // After checking, can be one of: 'authorized', 'denied', 'restricted', or 'undetermined'.
@@ -49,16 +50,6 @@ function SpeakScreen() {
     }
   }, [permissionMicrophone, permissionStorage]);
 
-  useEffect(() => {
-    if (duration >= currentPosition && duration !== null) {
-      console.log('Duration:', duration);
-      console.log('Current position:', currentPosition);
-      (async () => {
-        await audioRecorderPlayer.stopPlayer();
-      })();
-    }
-  }, [duration, currentPosition, audioRecorderPlayer]);
-
   function _requestPermissionMicrophone() {
     Permissions.request('microphone').then(status => {
       setPermissionMicrophone(status);
@@ -71,30 +62,23 @@ function SpeakScreen() {
   }
 
   async function onStartRecord() {
-    const result = await audioRecorderPlayer.startRecorder();
-    audioRecorderPlayer.addRecordBackListener(e => {
-      // this.setState({
-      //   recordSecs: e.current_position,
-      //   recordTime: this.audioRecorderPlayer.mmssss(Math.floor(e.current_position)),
-      // });
-      return;
-    });
-    console.log(result);
+    try {
+      await audioRecorderPlayer.startRecorder();
+      // audioRecorderPlayer.addRecordBackListener(e => {});
+      console.log('Started recording');
+    } catch (err) {
+      console.warn('Failed to start recording', err);
+    }
   }
 
   async function onStopRecord() {
-    const result = await audioRecorderPlayer.stopRecorder();
+    await audioRecorderPlayer.stopRecorder();
     audioRecorderPlayer.removeRecordBackListener();
-    // this.setState({
-    //   recordSecs: 0,
-    // });
-    console.log(result);
+    console.log('Stopped recording');
   }
 
   async function onStartPlay() {
-    console.log('onStartPlay');
-    const msg = await audioRecorderPlayer.startPlayer();
-    console.log('Done waiting to start playing', msg);
+    await audioRecorderPlayer.startPlayer();
     audioRecorderPlayer.addPlayBackListener(async function(ev) {
       setDuration(ev.duration);
       setCurrentPosition(ev.current_position);
@@ -118,15 +102,24 @@ function SpeakScreen() {
     }
   }
 
+  async function onSubmit() {
+    const res = await fetch(`${SERVER_HOST}/audio`, {
+      method: 'POST',
+      body: {uri: 'file:///sdcard/sound.mp4'},
+    });
+    console.log('Response from post request:', res);
+  }
+
   return (
     <View>
       {permissionMicrophone && permissionStorage ? (
         <Fragment>
           <Button title="Start Recording" onPress={onStartRecord} />
-          <Button title="Stop Recroding" onPress={onStopRecord} />
+          <Button title="Stop Recording" onPress={onStopRecord} />
           <Button title="Start Playing" onPress={onStartPlay} />
           <Button title="Pause" onPress={onPausePlay} />
           <Button title="Stop" onPress={onStopPlay} />
+          <Button title="Send to server" onPress={onSubmit} />
         </Fragment>
       ) : (
         <Text>Checking your permissions. Please wait...</Text>
