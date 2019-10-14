@@ -2,15 +2,18 @@ import React, {Fragment, useEffect, useState} from 'react';
 import {Alert, Button, Text, View} from 'react-native';
 import Permissions from 'react-native-permissions';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
+import RNFS from 'react-native-fs';
 import {SERVER_HOST} from '../../config';
 
 function SpeakScreen() {
   // After checking, can be one of: 'authorized', 'denied', 'restricted', or 'undetermined'.
   const [permissionMicrophone, setPermissionMicrophone] = useState(null);
   const [permissionStorage, setPermissionStorage] = useState(null);
+  const [soundFileExists, setSoundFileExists] = useState(null);
+  const [isRecording, setIsRecording] = useState(false);
   const [duration, setDuration] = useState(null);
   const [currentPosition, setCurrentPosition] = useState(null);
-  const audioRecorderPlayer = new AudioRecorderPlayer();
+  const [audioRecorderPlayer, setAudioRecorderPlayer] = useState({});
 
   useEffect(() => {
     Permissions.check('microphone').then(status => {
@@ -20,6 +23,21 @@ function SpeakScreen() {
       setPermissionStorage(status);
     });
   }, []);
+
+  useEffect(() => {
+    if (
+      Object.keys(audioRecorderPlayer).length === 0 &&
+      audioRecorderPlayer.constructor === Object
+    ) {
+      RNFS.unlink(RNFS.ExternalStorageDirectoryPath + '/sound.mp4');
+    } else {
+      RNFS.exists(RNFS.ExternalStorageDirectoryPath + '/sound.mp4').then(
+        bool => {
+          setSoundFileExists(bool);
+        },
+      );
+    }
+  }, [audioRecorderPlayer]);
 
   useEffect(() => {
     if (permissionMicrophone === 'undetermined') {
@@ -63,7 +81,10 @@ function SpeakScreen() {
 
   async function onStartRecord() {
     try {
+      setAudioRecorderPlayer(new AudioRecorderPlayer());
       await audioRecorderPlayer.startRecorder();
+      setIsRecording(true);
+      setSoundFileExists(true);
       // audioRecorderPlayer.addRecordBackListener(e => {});
       console.log('Started recording');
     } catch (err) {
@@ -74,6 +95,7 @@ function SpeakScreen() {
   async function onStopRecord() {
     await audioRecorderPlayer.stopRecorder();
     audioRecorderPlayer.removeRecordBackListener();
+    setIsRecording(false);
     console.log('Stopped recording');
   }
 
@@ -113,14 +135,23 @@ function SpeakScreen() {
   return (
     <View>
       {permissionMicrophone && permissionStorage ? (
-        <Fragment>
+        !soundFileExists ? (
           <Button title="Start Recording" onPress={onStartRecord} />
+        ) : isRecording ? (
           <Button title="Stop Recording" onPress={onStopRecord} />
-          <Button title="Start Playing" onPress={onStartPlay} />
-          <Button title="Pause" onPress={onPausePlay} />
-          <Button title="Stop" onPress={onStopPlay} />
-          <Button title="Send to server" onPress={onSubmit} />
-        </Fragment>
+        ) : (
+          <Fragment>
+            {!audioRecorderPlayer._isPlaying ? (
+              <Button title="Start Playing" onPress={onStartPlay} />
+            ) : (
+              <Fragment>
+                <Button title="Pause" onPress={onPausePlay} />
+                <Button title="Stop" onPress={onStopPlay} />
+              </Fragment>
+            )}
+            <Button title="Send to server" onPress={onSubmit} />
+          </Fragment>
+        )
       ) : (
         <Text>Checking your permissions. Please wait...</Text>
       )}
