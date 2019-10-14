@@ -11,8 +11,7 @@ function SpeakScreen() {
   const [permissionStorage, setPermissionStorage] = useState(null);
   const [soundFileExists, setSoundFileExists] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
-  const [duration, setDuration] = useState(null);
-  const [currentPosition, setCurrentPosition] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [audioRecorderPlayer, setAudioRecorderPlayer] = useState({});
 
   useEffect(() => {
@@ -25,10 +24,8 @@ function SpeakScreen() {
   }, []);
 
   useEffect(() => {
-    if (
-      Object.keys(audioRecorderPlayer).length === 0 &&
-      audioRecorderPlayer.constructor === Object
-    ) {
+    // Check if recorder was initialized
+    if (!audioRecorderPlayer.startRecorder) {
       RNFS.unlink(RNFS.ExternalStorageDirectoryPath + '/sound.mp4');
     } else {
       RNFS.exists(RNFS.ExternalStorageDirectoryPath + '/sound.mp4').then(
@@ -81,11 +78,11 @@ function SpeakScreen() {
 
   async function onStartRecord() {
     try {
-      setAudioRecorderPlayer(new AudioRecorderPlayer());
-      await audioRecorderPlayer.startRecorder();
+      const recorder = new AudioRecorderPlayer();
+      setAudioRecorderPlayer(recorder);
+      await recorder.startRecorder();
       setIsRecording(true);
       setSoundFileExists(true);
-      // audioRecorderPlayer.addRecordBackListener(e => {});
       console.log('Started recording');
     } catch (err) {
       console.warn('Failed to start recording', err);
@@ -94,16 +91,20 @@ function SpeakScreen() {
 
   async function onStopRecord() {
     await audioRecorderPlayer.stopRecorder();
-    audioRecorderPlayer.removeRecordBackListener();
     setIsRecording(false);
     console.log('Stopped recording');
   }
 
   async function onStartPlay() {
     await audioRecorderPlayer.startPlayer();
-    audioRecorderPlayer.addPlayBackListener(async function(ev) {
-      setDuration(ev.duration);
-      setCurrentPosition(ev.current_position);
+    setIsPlaying(true);
+    audioRecorderPlayer.addPlayBackListener(async ev => {
+      if (ev.duration <= ev.current_position) {
+        console.log('Finished playing');
+        audioRecorderPlayer.removePlayBackListener();
+        setIsPlaying(false);
+        await audioRecorderPlayer.stopPlayer();
+      }
     });
   }
 
@@ -119,6 +120,7 @@ function SpeakScreen() {
     try {
       await audioRecorderPlayer.stopPlayer();
       audioRecorderPlayer.removePlayBackListener();
+      setIsPlaying(false);
     } catch (err) {
       console.warn(`Error happened when stopping player: ${err}`);
     }
@@ -141,7 +143,7 @@ function SpeakScreen() {
           <Button title="Stop Recording" onPress={onStopRecord} />
         ) : (
           <Fragment>
-            {!audioRecorderPlayer._isPlaying ? (
+            {!isPlaying ? (
               <Button title="Start Playing" onPress={onStartPlay} />
             ) : (
               <Fragment>
