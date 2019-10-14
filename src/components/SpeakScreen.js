@@ -105,7 +105,7 @@ function SpeakScreen() {
   async function onSubmit() {
     const res = await fetch(`${SERVER_HOST}/audio`, {
       method: 'POST',
-      body: 'Placeholder for the audio file',
+      body: {uri: 'file:///sdcard/sound.mp4'},
     });
     console.log('Response from post request:', res);
   }
