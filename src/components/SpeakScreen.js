@@ -2,15 +2,17 @@ import React, {Fragment, useEffect, useState} from 'react';
 import {Alert, Button, Text, View} from 'react-native';
 import Permissions from 'react-native-permissions';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
+import RNFS from 'react-native-fs';
 import {SERVER_HOST} from '../../config';
 
 function SpeakScreen() {
   // After checking, can be one of: 'authorized', 'denied', 'restricted', or 'undetermined'.
   const [permissionMicrophone, setPermissionMicrophone] = useState(null);
   const [permissionStorage, setPermissionStorage] = useState(null);
-  const [duration, setDuration] = useState(null);
-  const [currentPosition, setCurrentPosition] = useState(null);
-  const audioRecorderPlayer = new AudioRecorderPlayer();
+  const [soundFileExists, setSoundFileExists] = useState(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioRecorderPlayer, setAudioRecorderPlayer] = useState({});
 
   useEffect(() => {
     Permissions.check('microphone').then(status => {
@@ -20,6 +22,19 @@ function SpeakScreen() {
       setPermissionStorage(status);
     });
   }, []);
+
+  useEffect(() => {
+    // Check if recorder was initialized
+    if (!audioRecorderPlayer.startRecorder) {
+      RNFS.unlink(RNFS.ExternalStorageDirectoryPath + '/sound.mp4');
+    } else {
+      RNFS.exists(RNFS.ExternalStorageDirectoryPath + '/sound.mp4').then(
+        bool => {
+          setSoundFileExists(bool);
+        },
+      );
+    }
+  }, [audioRecorderPlayer]);
 
   useEffect(() => {
     if (permissionMicrophone === 'undetermined') {
@@ -63,8 +78,11 @@ function SpeakScreen() {
 
   async function onStartRecord() {
     try {
-      await audioRecorderPlayer.startRecorder();
-      // audioRecorderPlayer.addRecordBackListener(e => {});
+      const recorder = new AudioRecorderPlayer();
+      setAudioRecorderPlayer(recorder);
+      await recorder.startRecorder();
+      setIsRecording(true);
+      setSoundFileExists(true);
       console.log('Started recording');
     } catch (err) {
       console.warn('Failed to start recording', err);
@@ -73,15 +91,20 @@ function SpeakScreen() {
 
   async function onStopRecord() {
     await audioRecorderPlayer.stopRecorder();
-    audioRecorderPlayer.removeRecordBackListener();
+    setIsRecording(false);
     console.log('Stopped recording');
   }
 
   async function onStartPlay() {
     await audioRecorderPlayer.startPlayer();
-    audioRecorderPlayer.addPlayBackListener(async function(ev) {
-      setDuration(ev.duration);
-      setCurrentPosition(ev.current_position);
+    setIsPlaying(true);
+    audioRecorderPlayer.addPlayBackListener(async ev => {
+      if (ev.duration <= ev.current_position) {
+        console.log('Finished playing');
+        audioRecorderPlayer.removePlayBackListener();
+        setIsPlaying(false);
+        await audioRecorderPlayer.stopPlayer();
+      }
     });
   }
 
@@ -97,6 +120,7 @@ function SpeakScreen() {
     try {
       await audioRecorderPlayer.stopPlayer();
       audioRecorderPlayer.removePlayBackListener();
+      setIsPlaying(false);
     } catch (err) {
       console.warn(`Error happened when stopping player: ${err}`);
     }
@@ -113,14 +137,23 @@ function SpeakScreen() {
   return (
     <View>
       {permissionMicrophone && permissionStorage ? (
-        <Fragment>
+        !soundFileExists ? (
           <Button title="Start Recording" onPress={onStartRecord} />
+        ) : isRecording ? (
           <Button title="Stop Recording" onPress={onStopRecord} />
-          <Button title="Start Playing" onPress={onStartPlay} />
-          <Button title="Pause" onPress={onPausePlay} />
-          <Button title="Stop" onPress={onStopPlay} />
-          <Button title="Send to server" onPress={onSubmit} />
-        </Fragment>
+        ) : (
+          <Fragment>
+            {!isPlaying ? (
+              <Button title="Start Playing" onPress={onStartPlay} />
+            ) : (
+              <Fragment>
+                <Button title="Pause" onPress={onPausePlay} />
+                <Button title="Stop" onPress={onStopPlay} />
+              </Fragment>
+            )}
+            <Button title="Send to server" onPress={onSubmit} />
+          </Fragment>
+        )
       ) : (
         <Text>Checking your permissions. Please wait...</Text>
       )}
