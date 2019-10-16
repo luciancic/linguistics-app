@@ -22,5 +22,9 @@ def audio():
     os.remove('audio.wav')
     return text
 
+@app.route('/text', methods=['POST'])
+def text():
+    return 'hello world'
+
 # if __name__ == '__main__':
 app.run(debug=True)
