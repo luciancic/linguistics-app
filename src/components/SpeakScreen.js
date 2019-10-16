@@ -13,6 +13,7 @@ function SpeakScreen() {
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioRecorderPlayer, setAudioRecorderPlayer] = useState({});
+  const [responseText, setResponseText] = useState('');
 
   useEffect(() => {
     Permissions.check('microphone').then(status => {
@@ -131,7 +132,8 @@ function SpeakScreen() {
       method: 'POST',
       body: {uri: 'file:///sdcard/sound.mp4'},
     });
-    console.log('Response from post request:', res);
+    const text = await res.text();
+    setResponseText(text);
   }
 
   return (
@@ -152,6 +154,7 @@ function SpeakScreen() {
               </Fragment>
             )}
             <Button title="Send to server" onPress={onSubmit} />
+            {responseText.length > 0 && <Text>You said: {responseText}</Text>}
           </Fragment>
         )
       ) : (
