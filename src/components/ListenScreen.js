@@ -1,16 +1,26 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {Button, TextInput, StyleSheet, View} from 'react-native';
 import globalStyles from './globalStyles';
+import {SERVER_HOST} from '../../config';
 
 function ListenScreen() {
+  const [text, setText] = useState('');
+
+  async function onSubmit() {
+    await fetch(`${SERVER_HOST}/text`, {
+      method: 'POST',
+      body: text,
+    });
+  }
+
   return (
     <View style={globalStyles.container}>
       <View style={localStyles.inputView}>
         <TextInput
           style={localStyles.textInput}
           placeholder="Enter text you would like to hear"
-          onChangeText={() => {}}
-          onSubmitEditing={() => {}}
+          onChangeText={t => setText(t)}
+          onSubmitEditing={onSubmit}
         />
       </View>
       <View style={globalStyles.flexView}>
