@@ -17,7 +17,10 @@ def audio():
     os.system('ffmpeg -i audio.mp4 audio.wav')
     with sr.AudioFile('audio.wav') as source:
         audio = r.record(source)
-    return r.recognize_google(audio, language='fr-FR') 
+    text = r.recognize_google(audio, language='fr-FR') 
+    os.remove('audio.mp4')
+    os.remove('audio.wav')
+    return text
 
 # if __name__ == '__main__':
 app.run(debug=True)
