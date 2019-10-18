@@ -24,7 +24,7 @@ function ListenScreen() {
         />
       </View>
       <View style={globalStyles.flexView}>
-        <Button title="Listen" />
+        <Button title="Listen" onPress={onSubmit} />
       </View>
     </View>
   );
