@@ -17,10 +17,13 @@ def audio():
     os.system('ffmpeg -i audio.mp4 audio.wav')
     with sr.AudioFile('audio.wav') as source:
         audio = r.record(source)
-    text = r.recognize_google(audio, language='fr-FR') 
-    os.remove('audio.mp4')
-    os.remove('audio.wav')
-    return text
+    text = 'Something the recogniser doesn\'t understand'
+    try:
+        text = r.recognize_google(audio, language='fr-FR') 
+    finally:
+        os.remove('audio.mp4')
+        os.remove('audio.wav')
+        return text
 
 # if __name__ == '__main__':
 app.run(debug=True)
