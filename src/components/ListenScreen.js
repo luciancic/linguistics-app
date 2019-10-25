@@ -7,10 +7,7 @@ function ListenScreen() {
   const [text, setText] = useState('');
 
   async function onSubmit() {
-    await fetch(`${SERVER_HOST}/text`, {
-      method: 'POST',
-      body: text,
-    });
+    await fetch(`${SERVER_HOST}/text?text=${text}`);
   }
 
   return (
