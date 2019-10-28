@@ -1,13 +1,14 @@
 import React, {useState} from 'react';
 import {Button, TextInput, StyleSheet, View} from 'react-native';
+import SoundPlayer from 'react-native-sound-player';
 import globalStyles from './globalStyles';
 import {SERVER_HOST} from '../../config';
 
 function ListenScreen() {
   const [text, setText] = useState('');
 
-  async function onSubmit() {
-    await fetch(`${SERVER_HOST}/text?text=${text}`);
+  function onSubmit() {
+    SoundPlayer.playUrl(`${SERVER_HOST}/text?text=${text}`);
   }
 
   return (
@@ -21,7 +22,7 @@ function ListenScreen() {
         />
       </View>
       <View style={globalStyles.flexView}>
-        <Button title="Listen" onPress={onSubmit} />
+        <Button title="Submit and listen" onPress={onSubmit} disabled={!text} />
       </View>
     </View>
   );
