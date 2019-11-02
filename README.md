@@ -4,7 +4,10 @@ App that helps French students improve their pronunciation.
 
 ## Dev setup
 
-Install dependencies with `yarn`. Start server with `react-native run-android`. Make sure you have android studio installed.
+1. Install dependencies with `yarn`. 
+2. Make sure you have android studio installed and a virtual device running. 
+3. Start the javascript server with `react-native run-android`. 
+4. Make sure the back end server is running if you make requests to it.
 
 ## Deployment
 
