@@ -1,20 +1,28 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {Button, TextInput, StyleSheet, View} from 'react-native';
+import SoundPlayer from 'react-native-sound-player';
 import globalStyles from './globalStyles';
+import {SERVER_HOST} from '../../config';
 
 function ListenScreen() {
+  const [text, setText] = useState('');
+
+  function onSubmit() {
+    SoundPlayer.playUrl(`${SERVER_HOST}/text?text=${text}`);
+  }
+
   return (
     <View style={globalStyles.container}>
       <View style={localStyles.inputView}>
         <TextInput
           style={localStyles.textInput}
           placeholder="Enter text you would like to hear"
-          onChangeText={() => {}}
-          onSubmitEditing={() => {}}
+          onChangeText={t => setText(t)}
+          onSubmitEditing={onSubmit}
         />
       </View>
       <View style={globalStyles.flexView}>
-        <Button title="Listen" />
+        <Button title="Submit and listen" onPress={onSubmit} disabled={!text} />
       </View>
     </View>
   );
